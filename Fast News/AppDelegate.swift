@@ -2,7 +2,6 @@
 //  AppDelegate.swift
 //  Fast News
 //
-//  Created by Lucas Moreton on 16/09/19.
 //  Copyright © 2019 Lucas Moreton. All rights reserved.
 //
 
