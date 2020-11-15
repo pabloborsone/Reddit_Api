@@ -22,11 +22,11 @@ class HotNewsProvider {
     private let kCommentsEndpoint = "/r/ios/comments/@.json"
     
     // Hot News key/value parameters
-    private let kLimitKey = "limit"
-    private let kLimitValue = 5
     private let kAfterKey = "after"
-    private let kAfterValue = ""
+    private var afterValue = ""
     
+    // Fetch control flag
+    private(set) var isBeingFetched = false
     //MARK: - Singleton
     
     static let shared: HotNewsProvider = HotNewsProvider()
@@ -37,8 +37,8 @@ class HotNewsProvider {
         let alamofire = APIProvider.shared.sessionManager
         let requestString = APIProvider.shared.baseURL() + kHotNewsEndpoint
         
-        let parameters: Parameters = [ kLimitKey : kLimitValue,
-                                       kAfterKey : kAfterValue ]
+        let parameters: Parameters = [ kAfterKey : afterValue ]
+        isBeingFetched = true
         
         do {
             let requestURL = try requestString.asURL()
@@ -51,9 +51,14 @@ class HotNewsProvider {
                 case .success:
                     
                     guard let hotNewsDict = response.result.value as? [String: AnyObject],
-                          let dictArray = hotNewsDict["data"]?["children"] as? [[String: AnyObject]] else {
-                        completion { return [HotNews]() }
-                        return
+                        let dictArray = hotNewsDict["data"]?["children"] as? [[String: AnyObject]] else {
+                            completion { return [HotNews]() }
+                            self.isBeingFetched = false
+                            return
+                    }
+                    
+                    if let after = hotNewsDict["data"]?["after"] as? String {
+                        self.afterValue = after
                     }
                     
                     var hotNewsArray: [HotNews] = [HotNews]()
@@ -62,22 +67,26 @@ class HotNewsProvider {
                         let data = hotNews["data"]
                         
                         guard let jsonData = try? JSONSerialization.data(withJSONObject: data as Any, options: .prettyPrinted),
-                              let hotNews = try? JSONDecoder().decode(HotNews.self, from: jsonData) else {
-                            completion { return [HotNews]() }
-                            return
+                            let hotNews = try? JSONDecoder().decode(HotNews.self, from: jsonData) else {
+                                completion { return [HotNews]() }
+                                self.isBeingFetched = false
+                                return
                         }
                         
                         hotNewsArray.append(hotNews)
                     }
                     
+                    self.isBeingFetched = false
                     completion { return hotNewsArray }
                     break
                 case .failure(let error):
+                    self.isBeingFetched = false
                     completion { throw error }
                     break
                 }
             }
         } catch {
+            isBeingFetched = false
             completion { throw error }
         }
     }

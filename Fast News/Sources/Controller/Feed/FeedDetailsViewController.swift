@@ -12,6 +12,7 @@ class FeedDetailsViewController: UIViewController {
     //MARK: - Properties
     
     var hotNewsViewModel: HotNewsViewModel?
+    var isLoading = false
     
     var comments: [Comment] = [Comment]() {
         didSet {
@@ -26,6 +27,10 @@ class FeedDetailsViewController: UIViewController {
             }
             
             self.mainView.setup(with: viewModels, and: self)
+            if isLoading {
+                stopLoading()
+                isLoading = false
+            }
         }
     }
     
@@ -40,8 +45,12 @@ class FeedDetailsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        navigationItem.largeTitleDisplayMode = .never
-        
+        startLoading(withMessage: "Loading comments...", completionHandler: fetchComments)
+        isLoading = true
+        setupNavigationBar()
+    }
+    
+    private func fetchComments() {
         HotNewsProvider.shared.hotNewsComments(id: hotNewsViewModel?.id ?? "") { (completion) in
             do {
                 let comments = try completion()
@@ -52,9 +61,32 @@ class FeedDetailsViewController: UIViewController {
             }
         }
     }
+    
+    private func setupNavigationBar() {
+        let buttonImage: UIImage?
+        if #available(iOS 13.0, *) {
+            buttonImage = UIImage(systemName: "square.and.arrow.up")
+        } else {
+            buttonImage = UIImage(named: "share_icon")
+        }
+        
+        navigationItem.largeTitleDisplayMode = .never
+        navigationItem.rightBarButtonItem = UIBarButtonItem(image: buttonImage, style: .plain, target: self, action: #selector(shareUrl))
+    }
+    
+    @objc private func shareUrl() {
+        let url = URL(string: hotNewsViewModel?.url ?? "")
+        let urlToShare = [url]
+        let activityViewController = UIActivityViewController(activityItems: urlToShare as [Any], applicationActivities: nil)
+        
+        activityViewController.popoverPresentationController?.sourceView = self.view
+        activityViewController.excludedActivityTypes = [ UIActivity.ActivityType.postToFacebook ]
+        
+        self.present(activityViewController, animated: true, completion: nil)
+    }
 }
 
-extension FeedDetailsViewController: FeedViewDelegate {
+extension FeedDetailsViewController: FeedDelegate {
     func didTouch(cell: FeedCell, indexPath: IndexPath) {
         guard self.mainView.viewModels[indexPath.row].type == .hotNews,
             let viewModel = self.mainView.viewModels[indexPath.row] as? HotNewsViewModel else {

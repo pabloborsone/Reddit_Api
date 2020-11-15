@@ -17,11 +17,11 @@ class FeedDetailsView: UIView {
             tableView.reloadData()
         }
     }
-    var delegate: FeedViewDelegate?
+    var delegate: FeedDelegate?
     
     //MARK: - Public Methods
     
-    func setup(with viewModels: [TypeProtocol], and delegate: FeedViewDelegate) {
+    func setup(with viewModels: [TypeProtocol], and delegate: FeedDelegate) {
         tableView.estimatedRowHeight = 400
         tableView.rowHeight = UITableView.automaticDimension
         

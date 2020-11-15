@@ -7,8 +7,12 @@
 
 import UIKit
 
-protocol FeedViewDelegate {
+protocol FeedDelegate {
     func didTouch(cell: FeedCell, indexPath: IndexPath)
+}
+
+protocol FeedViewDelegate: FeedDelegate {
+    func didUpdate()
 }
 
 class FeedView: UIView {
@@ -61,5 +65,12 @@ extension FeedView: UITableViewDelegate, UITableViewDataSource {
         guard let cell = tableView.cellForRow(at: indexPath) as? FeedCell else { fatalError("Cell is not of type FeedCell!") }
         
         delegate?.didTouch(cell: cell, indexPath: indexPath)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let position = scrollView.contentOffset.y
+        if position > (tableView.contentSize.height - scrollView.frame.size.height) {
+            delegate?.didUpdate()
+        }
     }
 }

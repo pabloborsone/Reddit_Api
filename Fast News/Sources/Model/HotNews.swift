@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct HotNews: Codable {
+struct HotNews: Decodable {
     var id: String?
     var title: String?
     var preview: Preview?

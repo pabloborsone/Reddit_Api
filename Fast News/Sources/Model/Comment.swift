@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Comment: Codable {
+struct Comment: Decodable {
     var created: Int?
     var ups: Int?
     var downs: Int?

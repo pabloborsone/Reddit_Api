@@ -33,8 +33,7 @@ struct HotNewsViewModel {
         
         // preview url
         let previewUrl = hotNews.preview?.images?.first?.source?.url?.htmlDecoded ?? ""
-        guard let url = URL(string: previewUrl) else { return }
-        guard let data = try? Data(contentsOf: url) else { return }
+        guard let url = URL(string: previewUrl), let data = try? Data(contentsOf: url) else { return }
         image = UIImage(data: data) ?? UIImage()
     }
 }
